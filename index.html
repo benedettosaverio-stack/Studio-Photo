@@ -221,7 +221,6 @@ h1,h2,h3,h4{font-family:var(--sans)}
 .line-remove{color:var(--text3);font-size:20px;cursor:pointer;padding:4px}
 
 </style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
 <div id="app">
@@ -1835,6 +1834,9 @@ function exportData(){
 // EXPORT PDF DEVIS / FACTURE
 // ============================================================
 function exportDevisPDF(id){
+  loadJsPDF(()=>_exportDevisPDF(id));
+}
+function _exportDevisPDF(id){
   const d=DB.devis.find(x=>x.id===id);if(!d)return;
   const c=DB.clients.find(x=>x.id===d.clientId)||{};
   const {jsPDF}=window.jspdf;
@@ -2060,6 +2062,17 @@ document.addEventListener('DOMContentLoaded',()=>{
 
 // Handle back on mobile (Android style)
 window.addEventListener('popstate',()=>{if(viewStack.length)popView();});
+</script>
+<script>
+// Load jsPDF lazily only when needed
+function loadJsPDF(cb){
+  if(window.jspdf){cb();return;}
+  const s=document.createElement('script');
+  s.src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+  s.onload=()=>cb();
+  s.onerror=()=>alert('Impossible de charger jsPDF. Vérifiez votre connexion.');
+  document.head.appendChild(s);
+}
 </script>
 </body>
 </html>
