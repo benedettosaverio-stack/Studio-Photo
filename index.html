@@ -26,7 +26,7 @@
 }
 html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--sans);overflow:hidden}
 button{border:none;background:none;cursor:pointer;color:inherit;font-family:var(--sans)}
-input,textarea,select{font-family:var(--mono);font-size:14px;background:var(--bg3);border:1px solid var(--border2);color:var(--text);border-radius:var(--radius-sm);padding:10px 12px;width:100%;outline:none;transition:border-color .2s}
+input,textarea,select{font-family:var(--mono);font-size:14px;background:var(--bg3);border:1px solid var(--border2);color:var(--text);border-radius:var(--radius-sm);padding:10px 12px;width:100%;outline:none;transition:border-color .2s;box-sizing:border-box;-webkit-appearance:none;appearance:none;min-height:44px}
 input:focus,textarea:focus,select:focus{border-color:var(--red)}
 input[type="date"],input[type="number"],input[type="time"]{text-align:left}
 textarea{resize:vertical;min-height:80px}
