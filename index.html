@@ -1053,39 +1053,39 @@ function _doPDF(id){
 
   sf(7,'normal',G);doc.text('DOCUMENT',c3,dy);ln(c3,dy+1,c3+37,dy+1);
   const docRows=[['N°',d.num||'—'],['Date',d.date||'—'],...(d.echeance?[["Valide jusqu'au",d.echeance]]:[])];
-  docRows.forEach((r,i)=>{sf(7,'normal',G);doc.text(r[0],c3,dy+6+i*6);sf(8,'bold');doc.text(r[1],W-mr,dy+6+i*6,{align:'right'});});
+  docRows.forEach((r,i)=>{sf(7,'normal',G);doc.text(r[0],c3,dy+6+i*6);sf(8,'bold');doc.text(r[1],192,dy+6+i*6,{align:'right'});});
 
-  y+=38;ln(ml,y,W-mr,y,L,0.5);y+=8;
+  y+=38;ln(ml,y,192,y,L,0.5);y+=8;
 
   // Table header
-  rc(ml,y-4,W-ml-mr,8);sf(7,'bold',[255,255,255]);
+  rc(ml,y-4,180,8);sf(7,'bold',[255,255,255]);
   doc.text('DÉSIGNATION',ml+3,y+0.5);
-  doc.text('TOTAL HT',W-mr,y+0.5,{align:'right'});
+  doc.text('TOTAL HT',192,y+0.5,{align:'right'});
   y+=10;
 
   // Lignes
   (d.lignes||[]).forEach((l,i)=>{
-    if(i%2===1)rc(ml,y-4,W-ml-mr,8,[248,248,248]);
+    if(i%2===1)rc(ml,y-4,180,8,[248,248,248]);
     sf(8,'normal');const nl=doc.splitTextToSize(l.nom||'',155);doc.text(nl,ml+3,y+0.5);
-    sf(8,'bold');doc.text(`${(l.prix||0).toFixed(2)} €`,W-mr,y+0.5,{align:'right'});
+    sf(8,'bold');doc.text(`${(l.prix||0).toFixed(2)} €`,192,y+0.5,{align:'right'});
     y+=8*(nl.length>1?nl.length:1);
   });
-  ln(ml,y,W-mr,y,L,0.5);y+=6;
+  ln(ml,y,192,y,L,0.5);y+=6;
 
   // Totaux
   const tot=d.total||0,ac=tot*(p.acompte||30)/100;
-  doc.setFillColor(245,245,245);doc.rect(ml,y,W-ml-mr,9,'F');
-  sf(8,'normal',G);doc.text('Total HT',ml+3,y+6);sf(9,'bold',K);doc.text(`${tot.toFixed(2)} €`,W-mr,y+6,{align:'right'});y+=11;
-  doc.setFillColor(245,245,245);doc.rect(ml,y,W-ml-mr,9,'F');
-  sf(8,'normal',G);doc.text('TVA',ml+3,y+6);sf(8,'italic',G);doc.text(p.tva||'Non applicable — art. 293B CGI',W-mr,y+6,{align:'right'});y+=11;
-  rc(ml,y,W-ml-mr,12);sf(9,'bold',[160,160,160]);doc.text('TOTAL TTC',ml+3,y+8);sf(13,'bold',[255,255,255]);doc.text(`${tot.toFixed(2)} €`,W-mr,y+8,{align:'right'});y+=18;
+  doc.setFillColor(245,245,245);doc.rect(ml,y,180,9,'F');
+  sf(8,'normal',G);doc.text('Total HT',ml+3,y+6);sf(9,'bold',K);doc.text(`${tot.toFixed(2)} €`,192,y+6,{align:'right'});y+=11;
+  doc.setFillColor(245,245,245);doc.rect(ml,y,180,9,'F');
+  sf(8,'normal',G);doc.text('TVA',ml+3,y+6);sf(8,'italic',G);doc.text(p.tva||'Non applicable — art. 293B CGI',192,y+6,{align:'right'});y+=11;
+  rc(ml,y,180,12);sf(9,'bold',[160,160,160]);doc.text('TOTAL TTC',ml+3,y+8);sf(13,'bold',[255,255,255]);doc.text(`${tot.toFixed(2)} €`,192,y+8,{align:'right'});y+=18;
 
   // Acompte
-  doc.setFillColor(255,248,240);doc.rect(ml,y,W-ml-mr,8,'F');doc.setDrawColor(...R);doc.setLineWidth(0.5);doc.rect(ml,y,W-ml-mr,8);
+  doc.setFillColor(255,248,240);doc.rect(ml,y,180,8,'F');doc.setDrawColor(...R);doc.setLineWidth(0.5);doc.rect(ml,y,180,8);
   sf(8,'bold',R);doc.text(`Acompte à la réservation (${p.acompte||30} %) : ${ac.toFixed(2)} €`,ml+4,y+5.5);y+=14;
 
   // Conditions
-  ln(ml,y,W-mr,y,L,0.5);y+=6;sf(7,'bold',G);doc.text('CONDITIONS & INFORMATIONS',ml,y);y+=5;sf(7,'normal',G);
+  ln(ml,y,192,y,L,0.5);y+=6;sf(7,'bold',G);doc.text('CONDITIONS & INFORMATIONS',ml,y);y+=5;sf(7,'normal',G);
   const defaultConds=[
     `• Acompte ${p.acompte||30} % à la réservation.`,
     '• Devis valable 30 jours.',
@@ -1099,7 +1099,7 @@ function _doPDF(id){
   y+=4;
 
   // Signatures
-  ln(ml,y,W-mr,y,L,0.3);y+=8;
+  ln(ml,y,192,y,L,0.3);y+=8;
   sf(7,'bold');doc.text('Bon pour accord — Signature client',ml,y);
   sf(7,'italic',G);doc.text('(Précédé de « Bon pour accord »)',ml,y+4);
   doc.text('Date : ____________________________',ml,y+10);
@@ -1110,9 +1110,9 @@ function _doPDF(id){
   if(p.tel)doc.text(p.tel,W-mr-55,y+15);
 
   // Footer
-  rc(0,H-10,W,10);sf(6,'normal',[140,140,140]);
+  rc(0,H-10,210,10);sf(6,'normal',[140,140,140]);
   const footerText=`${fullName||'Studio Pro'} · ${p.activite||'Photographe'} · SIRET : ${p.siret||"En cours d'immatriculation"} · ${p.tva||'TVA non applicable — art. 293 B du CGI'}`;
-  doc.text(footerText,W/2,H-5,{align:'center'});
+  doc.text(footerText,105,H-5,{align:'center'});
 
   doc.save(`${d.type==='facture'?'Facture':'Devis'}-${d.num||id}-${(c.nom||'client')}.pdf`);
 }
