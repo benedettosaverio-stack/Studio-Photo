@@ -693,7 +693,11 @@ function buildForm(type,id){
       <div class="divider"></div>
       <div class="form-group" style="margin-bottom:8px"><label>Lignes</label>
         <div id="lines-container">${linesHtml||''}</div>
-        <button class="btn-secondary" style="margin-top:8px;width:100%;padding:10px;font-size:13px" onclick="addLine()">+ Ajouter une ligne</button>
+        <div style="display:flex;gap:8px;margin-top:8px">
+  <button class="btn-secondary" style="flex:1;padding:10px;font-size:13px" onclick="addLineFromTarif()">+ Depuis tarifs</button>
+  <button class="btn-secondary" style="flex:1;padding:10px;font-size:13px" onclick="addLine()">+ Ligne libre</button>
+</div>
+<div id="tarif-picker" style="display:none;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;margin-top:8px;max-height:200px;overflow-y:auto"></div>
       </div>
       <div id="devis-total-preview" style="font-family:var(--mono);font-size:14px;color:var(--red);text-align:right;padding:8px 0"></div>
       <div class="form-group"><label>Notes</label><textarea id="f-notes" placeholder="Conditions, mentions...">${d.notes||''}</textarea></div>
@@ -750,6 +754,31 @@ function buildForm(type,id){
 
 // Devis line helpers (modal context)
 let tempLines=[];
+function addLineFromTarif(){
+  const picker=document.getElementById('tarif-picker');
+  if(picker.style.display==='block'){picker.style.display='none';return;}
+  picker.innerHTML=DB.tarifs.map(t=>`
+    <div onclick="pickTarif('${t.id}')" style="padding:10px 14px;border-bottom:1px solid var(--border);cursor:pointer;display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <div style="font-size:13px;font-weight:600;color:var(--text)">${t.nom}</div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--text2)">${t.desc||''}</div>
+      </div>
+      <div style="font-family:var(--mono);font-size:14px;font-weight:500;color:var(--red);white-space:nowrap;margin-left:12px">${t.prix > 0 ? t.prix+'€' : 'Sur devis'}</div>
+    </div>`).join('');
+  picker.style.display='block';
+}
+function pickTarif(tid){
+  const t=DB.tarifs.find(x=>x.id===tid);
+  if(!t)return;
+  const c=document.getElementById('lines-container');
+  const i=c.children.length;
+  const div=document.createElement('div');
+  div.className='line-item-row';div.id='line-'+i;
+  div.innerHTML=\`<input placeholder="Prestation" value="\${t.nom}" oninput="updateLine(\${i},'nom',this.value)"><input class="price-in" placeholder="Prix" type="number" value="\${t.prix}" oninput="updateLine(\${i},'prix',this.value)"><span class="line-remove" onclick="removeLine(\${i})">✕</span>\`;
+  c.appendChild(div);
+  document.getElementById('tarif-picker').style.display='none';
+  updateDevisTotal();
+}
 function addLine(){
   tempLines.push({nom:'',prix:0});
   const c=document.getElementById('lines-container');
