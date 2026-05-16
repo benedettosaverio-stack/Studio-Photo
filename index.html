@@ -455,7 +455,7 @@ function buildForm(type,id){
     const g=id?DB.galeries.find(x=>x.id===id):{};
     return `<div class="form-group"><label>Titre</label><input id="f-nom" value="${g.nom||''}" placeholder="Mariage Dupont — Juin 2025"></div>
     <div class="form-group"><label>Client associé</label><select id="f-client"><option value="">Aucun</option>${clientOpts(g.clientId||'')}</select></div>
-    <div class="form-row"><div class="form-group"><label>Date</label><input id="f-date" type="date" value="${g.date||today()}"></div><div class="form-group"><label>Nb photos</label><input id="f-nb" type="number" min="0" value="${g.nb||''}"></div></div>
+    <div class="form-group"><label>Date</label><input id="f-date" type="date" value="${g.date||today()}"></div><div class="form-group"><label>Nb photos livrées</label><input id="f-nb" type="number" min="0" placeholder="0" value="${g.nb||''}"></div>
     <div class="form-group"><label>Lien galerie</label><input id="f-lien" type="url" value="${g.lien||''}" placeholder="https://pixieset.com/..."></div>
     <div class="form-group"><label>Notes</label><textarea id="f-notes" placeholder="Statut retouche, livraison...">${g.notes||''}</textarea></div>`;
   }
