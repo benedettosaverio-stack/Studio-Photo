@@ -221,6 +221,7 @@ h1,h2,h3,h4{font-family:var(--sans)}
 .line-remove{color:var(--text3);font-size:20px;cursor:pointer;padding:4px}
 
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
 <div id="app">
@@ -1656,6 +1657,7 @@ function openDevisDetail(id){
     <div class="action-row">
       ${d.statut!=='payé'?`<button class="action-chip" onclick="markDevisPaid('${id}')">Marquer payé</button>`:''}
       ${d.type==='devis'?`<button class="action-chip" onclick="convertToFacture('${id}')">Convertir en facture</button>`:''}
+      <button class="action-chip" onclick="exportDevisPDF('${id}')" style="color:var(--red);border-color:var(--red)">Exporter PDF</button>
     </div>
     <div class="detail-section">
       <div class="detail-section-title">Informations</div>
@@ -1826,6 +1828,226 @@ function exportData(){
   const a=document.createElement('a');
   a.href=url;a.download=`studio-backup-${today()}.json`;a.click();
   URL.revokeObjectURL(url);
+}
+
+
+// ============================================================
+// EXPORT PDF DEVIS / FACTURE
+// ============================================================
+function exportDevisPDF(id){
+  const d=DB.devis.find(x=>x.id===id);if(!d)return;
+  const c=DB.clients.find(x=>x.id===d.clientId)||{};
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({unit:'mm',format:'a4'});
+  const W=210,H=297;
+  const ml=15,mr=15,mt=15;
+  let y=mt;
+
+  // Colors
+  const BLACK=[20,20,20];
+  const GRAY=[120,120,120];
+  const LIGHTGRAY=[220,220,220];
+  const RED=[220,20,60];
+  const WHITEBG=[255,255,255];
+  const DARKBG=[30,30,30];
+
+  // Helper
+  const setFont=(size,style='normal',color=BLACK)=>{
+    doc.setFontSize(size);
+    doc.setFont('helvetica',style);
+    doc.setTextColor(...color);
+  };
+  const line=(x1,y1,x2,y2,color=LIGHTGRAY,w=0.3)=>{
+    doc.setDrawColor(...color);
+    doc.setLineWidth(w);
+    doc.line(x1,y1,x2,y2);
+  };
+  const rect=(x,yy,w,h,fill=DARKBG)=>{
+    doc.setFillColor(...fill);
+    doc.rect(x,yy,w,h,'F');
+  };
+
+  // ── HEADER BAR ──────────────────────────────────────────
+  rect(0,0,W,22,DARKBG);
+  setFont(14,'bold',[255,255,255]);
+  doc.text('Saverio Benedetto',ml,10);
+  setFont(9,'normal',[180,180,180]);
+  doc.text('Photographe',ml,15);
+  setFont(8,'normal',[160,160,160]);
+  doc.text('benedettosaverio.myportfolio.com',W-mr,10,{align:'right'});
+  doc.text('benedetto.saverio@outlook.fr',W-mr,15,{align:'right'});
+  y=30;
+
+  // ── TYPE BADGE ──────────────────────────────────────────
+  const typeLabel=d.type==='facture'?'FACTURE':'DEVIS';
+  setFont(22,'bold',RED);
+  doc.text(typeLabel,ml,y+6);
+  y+=14;
+
+  // ── TWO COLUMNS: émetteur | destinataire + infos doc ────
+  const col1x=ml, col2x=105, col3x=160;
+
+  // Émetteur
+  setFont(7,'normal',GRAY);
+  doc.text('ÉMETTEUR',col1x,y);
+  line(col1x,y+1,col1x+45,y+1,LIGHTGRAY);
+  y+=5;
+  setFont(9,'bold',BLACK);
+  doc.text('Saverio Benedetto',col1x,y);
+  setFont(8,'normal',BLACK);
+  doc.text('2 Rue Pierre Bachelet',col1x,y+5);
+  doc.text('59770 Marly',col1x,y+10);
+  doc.text('06 52 28 25 31',col1x,y+15);
+  doc.text('benedetto.saverio@outlook.fr',col1x,y+20);
+  setFont(7,'italic',GRAY);
+  doc.text('SIRET : En cours d'immatriculation',col1x,y+26);
+
+  // Destinataire
+  const destY=y-5;
+  setFont(7,'normal',GRAY);
+  doc.text('DESTINATAIRE',col2x,destY);
+  line(col2x,destY+1,col2x+50,destY+1,LIGHTGRAY);
+  const clientName=`${c.prenom||''} ${c.nom||''}`.trim()||'—';
+  setFont(9,'bold',BLACK);
+  doc.text(clientName,col2x,destY+6);
+  setFont(8,'normal',BLACK);
+  if(c.ville)doc.text(c.ville,col2x,destY+11);
+  if(c.email)doc.text(c.email,col2x,destY+16);
+  if(c.tel)doc.text(c.tel,col2x,destY+21);
+
+  // Infos document
+  setFont(7,'normal',GRAY);
+  doc.text('DOCUMENT',col3x,destY);
+  line(col3x,destY+1,col3x+35,destY+1,LIGHTGRAY);
+  const infoRows=[
+    ['N°',d.num||'—'],
+    ['Date',d.date||'—'],
+    d.echeance?['Valide jusqu'au',d.echeance]:null,
+  ].filter(Boolean);
+  infoRows.forEach((row,i)=>{
+    setFont(7,'normal',GRAY);
+    doc.text(row[0],col3x,destY+6+i*6);
+    setFont(8,'bold',BLACK);
+    doc.text(row[1],W-mr,destY+6+i*6,{align:'right'});
+  });
+
+  y+=36;
+  line(ml,y,W-mr,y,LIGHTGRAY,0.5);
+  y+=8;
+
+  // ── TABLE HEADER ────────────────────────────────────────
+  rect(ml,y-4,W-ml-mr,8,DARKBG);
+  setFont(7,'bold',[255,255,255]);
+  doc.text('DÉSIGNATION',ml+3,y+0.5);
+  doc.text('QTÉ',W-mr-62,y+0.5,{align:'right'});
+  doc.text('P.U. HT',W-mr-35,y+0.5,{align:'right'});
+  doc.text('TOTAL HT',W-mr,y+0.5,{align:'right'});
+  y+=10;
+
+  // ── TABLE ROWS ──────────────────────────────────────────
+  const lignes=d.lignes||[];
+  lignes.forEach((l,i)=>{
+    if(i%2===1){rect(ml,y-4,W-ml-mr,8,[248,248,248]);}
+    setFont(8,'normal',BLACK);
+    const nameLines=doc.splitTextToSize(l.nom||'',90);
+    doc.text(nameLines,ml+3,y+0.5);
+    doc.text('1',W-mr-62,y+0.5,{align:'right'});
+    setFont(8,'normal',GRAY);
+    doc.text(`${(l.prix||0).toFixed(2)} €`,W-mr-35,y+0.5,{align:'right'});
+    setFont(8,'bold',BLACK);
+    doc.text(`${(l.prix||0).toFixed(2)} €`,W-mr,y+0.5,{align:'right'});
+    y+=8*(nameLines.length>1?nameLines.length:1);
+  });
+
+  line(ml,y,W-mr,y,LIGHTGRAY,0.5);
+  y+=6;
+
+  // ── TOTAUX ──────────────────────────────────────────────
+  const total=d.total||0;
+  const acompte=total*0.30;
+
+  // Total box
+  rect(W-mr-70,y-2,70,10,[240,240,240]);
+  setFont(8,'normal',GRAY);
+  doc.text('Total HT',W-mr-68,y+4.5);
+  setFont(9,'bold',BLACK);
+  doc.text(`${total.toFixed(2)} €`,W-mr,y+4.5,{align:'right'});
+  y+=12;
+
+  rect(W-mr-70,y-2,70,10,[240,240,240]);
+  setFont(8,'normal',GRAY);
+  doc.text('TVA',W-mr-68,y+4.5);
+  setFont(8,'italic',GRAY);
+  doc.text('Non applicable (293B)',W-mr,y+4.5,{align:'right'});
+  y+=12;
+
+  rect(W-mr-70,y-2,70,12,DARKBG);
+  setFont(8,'normal',[200,200,200]);
+  doc.text('TOTAL TTC',W-mr-68,y+5.5);
+  setFont(11,'bold',[255,255,255]);
+  doc.text(`${total.toFixed(2)} €`,W-mr,y+5.5,{align:'right'});
+  y+=18;
+
+  // Acompte
+  rect(ml,y-2,W-ml-mr,8,[255,248,240]);
+  doc.setDrawColor(...RED);
+  doc.setLineWidth(0.5);
+  doc.rect(ml,y-2,W-ml-mr,8);
+  setFont(8,'bold',RED);
+  doc.text(`Acompte à la réservation (30 %) : ${acompte.toFixed(2)} €`,ml+4,y+3.5);
+  setFont(7,'normal',GRAY);
+  doc.text('Confirme définitivement la date et la prestation.',W-mr,y+3.5,{align:'right'});
+  y+=14;
+
+  // ── CONDITIONS ──────────────────────────────────────────
+  line(ml,y,W-mr,y,LIGHTGRAY,0.5);
+  y+=6;
+  setFont(7,'bold',GRAY);
+  doc.text('CONDITIONS & INFORMATIONS',ml,y);
+  y+=5;
+  const conditions=[
+    '• Acompte : 30 % à la réservation — confirme la réservation de la date.',
+    '• Devis valable 30 jours à compter de la date d'émission.',
+    '• Annulation client < 72h : acompte conservé. Annulation photographe : remboursement intégral.',
+    '• Livraison des photos : galerie privée en ligne sous 10 à 15 jours ouvrés après la prestation.',
+    '• Déplacement inclus jusqu'à 20 km. Au-delà : 0,35 €/km supplémentaire.',
+    '• TVA non applicable — art. 293 B du CGI.',
+  ];
+  setFont(7,'normal',GRAY);
+  conditions.forEach(cond=>{
+    const lines=doc.splitTextToSize(cond,W-ml-mr);
+    doc.text(lines,ml,y);
+    y+=4.5*lines.length;
+  });
+  y+=4;
+
+  // ── SIGNATURE ───────────────────────────────────────────
+  line(ml,y,W-mr,y,LIGHTGRAY,0.3);
+  y+=8;
+  // Client
+  setFont(7,'bold',BLACK);
+  doc.text('Bon pour accord — Signature client',ml,y);
+  setFont(7,'italic',GRAY);
+  doc.text('(Précédé de la mention « Bon pour accord »)',ml,y+4);
+  doc.text('Date : ____________________________',ml,y+10);
+  doc.text('Signature :',ml,y+18);
+  line(ml+24,y+18,ml+80,y+18,LIGHTGRAY);
+  // Émetteur
+  setFont(7,'bold',BLACK);
+  doc.text('Émis par',W-mr-60,y);
+  setFont(7,'normal',BLACK);
+  doc.text('Saverio Benedetto Photographe',W-mr-60,y+5);
+  doc.text('benedetto.saverio@outlook.fr',W-mr-60,y+10);
+  doc.text('06 52 28 25 31',W-mr-60,y+15);
+
+  // ── FOOTER ──────────────────────────────────────────────
+  rect(0,H-10,W,10,DARKBG);
+  setFont(6,'normal',[140,140,140]);
+  doc.text('Saverio Benedetto Photographe  ·  Micro-entreprise  ·  SIRET : En cours d'immatriculation  ·  TVA non applicable — art. 293 B du CGI',W/2,H-5,{align:'center'});
+
+  // Save
+  const filename=`${d.type==='facture'?'Facture':'Devis'}-${d.num||id}-${c.nom||'client'}.pdf`;
+  doc.save(filename);
 }
 
 // ============================================================
