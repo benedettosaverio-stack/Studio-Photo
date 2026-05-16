@@ -434,13 +434,33 @@ h1,h2,h3,h4{font-family:var(--sans)}
 // ============================================================
 // DATA LAYER
 // ============================================================
+
+const TARIFS_DEFAULT = [
+  {id:'t1', nom:'Découverte — Événement', prix:120, unite:'forfait', cat:'reportage', desc:'1h30 · 30 photos HD · Galerie 60 jours'},
+  {id:'t2', nom:'Essentielle — Événement', prix:220, unite:'forfait', cat:'reportage', desc:'3h · 60 photos HD · Galerie 90 jours'},
+  {id:'t3', nom:'Complète — Événement', prix:350, unite:'forfait', cat:'reportage', desc:'5h · 100 photos HD · Galerie 6 mois'},
+  {id:'t4', nom:'Journée complète — Événement', prix:550, unite:'forfait', cat:'reportage', desc:"Jusqu'à 8h · 150 photos HD · Galerie 1 an"},
+  {id:'t5', nom:'Portrait Solo', prix:90, unite:'forfait', cat:'portrait', desc:'1h · 20 photos HD · Galerie 60 jours'},
+  {id:'t6', nom:'Séance Couple', prix:130, unite:'forfait', cat:'portrait', desc:'1h30 · 35 photos HD · Galerie 90 jours'},
+  {id:'t7', nom:'Séance Famille', prix:180, unite:'forfait', cat:'portrait', desc:'2h · 50 photos HD · Galerie 6 mois'},
+  {id:'t8', nom:'Shooting Voiture Essentiel', prix:100, unite:'forfait', cat:'voiture', desc:'1h30 · 25 photos HD · Galerie 90 jours'},
+  {id:'t9', nom:'Shooting Voiture Premium', prix:200, unite:'forfait', cat:'voiture', desc:'3h · 50 photos HD · 2 lieux · Galerie 6 mois'},
+  {id:'t10', nom:'Shooting Animal Solo', prix:80, unite:'forfait', cat:'animal', desc:'1h · 20 photos HD · Galerie 60 jours'},
+  {id:'t11', nom:'Shooting Animal + Maître', prix:110, unite:'forfait', cat:'animal', desc:'1h30 · 30 photos HD · Galerie 90 jours'},
+  {id:'t12', nom:'2ème photo. mariage', prix:200, unite:'forfait', cat:'mariage', desc:"Journée aux côtés d'un photographe principal"},
+  {id:'t13', nom:'Option Tirage A3', prix:35, unite:'forfait', cat:'option', desc:'Photo retouchée imprimée encadrée 20x30 cm'},
+  {id:'t14', nom:'Heure supplémentaire', prix:50, unite:'/h', cat:'option', desc:'Au-delà de la durée forfaitaire prévue'},
+  {id:'t15', nom:'Livraison prioritaire 48h', prix:30, unite:'forfait', cat:'option', desc:'Express au lieu du délai standard 10-15 jours'},
+];
 const KEYS = {clients:'sp_clients',sessions:'sp_sessions',tarifs:'sp_tarifs',devis:'sp_devis',galeries:'sp_galeries',notes:'sp_notes',todos:'sp_todos'};
 function load(k){try{return JSON.parse(localStorage.getItem(KEYS[k])||'[]')}catch{return[]}}
 function save(k,d){localStorage.setItem(KEYS[k],JSON.stringify(d))}
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
 
+let _tarifs=load('tarifs');
+if(!_tarifs.length){_tarifs=TARIFS_DEFAULT;save('tarifs',_tarifs);}
 let DB={
-  clients:load('clients'),sessions:load('sessions'),tarifs:load('tarifs'),
+  clients:load('clients'),sessions:load('sessions'),tarifs:_tarifs,
   devis:load('devis'),galeries:load('galeries'),notes:load('notes'),todos:load('todos')
 };
 function persist(k){save(k,DB[k])}
@@ -627,12 +647,13 @@ function buildForm(type,id){
       <div class="form-group"><label>Description</label><textarea id="f-desc" placeholder="Détails inclus...">${t.desc||''}</textarea></div>
       <div class="form-group"><label>Catégorie</label>
         <select id="f-cat">
-          <option value="portrait" ${(t.cat||'portrait')==='portrait'?'selected':''}>Portrait</option>
+          <option value="reportage" ${(t.cat||'reportage')==='reportage'?'selected':''}>Reportage événementiel</option>
+          <option value="portrait" ${t.cat==='portrait'?'selected':''}>Portraits & Shootings</option>
+          <option value="voiture" ${t.cat==='voiture'?'selected':''}>Shooting Voiture</option>
+          <option value="animal" ${t.cat==='animal'?'selected':''}>Shooting Animal</option>
           <option value="mariage" ${t.cat==='mariage'?'selected':''}>Mariage</option>
-          <option value="corporate" ${t.cat==='corporate'?'selected':''}>Corporate</option>
-          <option value="famille" ${t.cat==='famille'?'selected':''}>Famille</option>
-          <option value="produit" ${t.cat==='produit'?'selected':''}>Produit</option>
-          <option value="autre" ${t.cat==='autre'?'selected':''}>Autre</option>
+          <option value="option" ${t.cat==='option'?'selected':''}>Option / Supplément</option>
+          <option value="autre" ${t.cat==='autre'?'selected':''}>Autre / Sur-mesure</option>
         </select>
       </div>
     `;
