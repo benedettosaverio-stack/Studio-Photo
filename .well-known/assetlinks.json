@@ -1,0 +1,10 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "com.studiopro.app",
+    "sha256_cert_fingerprints": [
+      "8A:AC:03:26:BC:F2:F7:7F:04:A2:91:59:11:A6:C4:80:1D:F7:4F:95:13:96:19:35:06:4C:A5:9B:BD:5E:A2:49"
+    ]
+  }
+}]
